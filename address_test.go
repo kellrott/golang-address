@@ -160,46 +160,76 @@ var tests = []testPair{
 			StreetName: "128.5 s main street bitch",
 		},
 	}, {
-    "100 Southwest Maple Tree Blvd",
+		"100 Southwest Maple Tree Blvd",
+		Address{
+			House:           100,
+			StreetDirection: "sw",
+			StreetName:      "maple tree",
+			StreetType:      "blvd",
+		},
+	}, {
+		"100 S Imperial Valley Drive",
+		Address{
+			House:           100,
+			StreetDirection: "s",
+			StreetName:      "imperial valley",
+			StreetType:      "dr",
+		},
+	}, {
+		"100 s. weird. st.",
+		Address{
+			House:           100,
+			StreetDirection: "s",
+			StreetName:      "weird",
+			StreetType:      "st",
+		},
+	}, {
+		"221b s main st",
+		Address{
+			StreetName: "221b s main st",
+		},
+	}, {
+		"221 completely unrecognizable street name",
+		Address{
+			House:      221,
+			StreetName: "completely unrecognizable street name",
+		},
+	}, {
+		"100 Circle Drive",
+		Address{
+			House:      100,
+			StreetName: "circle",
+			StreetType: "dr",
+		},
+	}, {
+		"100 Circle Drive, yarmouth ME, 12345",
+		Address{
+			House:      100,
+			StreetName: "circle",
+			StreetType: "dr",
+			State:      "me",
+			City:       "yarmouth",
+			ZipCode:    "12345",
+		},
+	}, {
+		"100 Circle Drive, yarmouth ME 12345",
+		Address{
+			House:      100,
+			StreetName: "circle",
+			StreetType: "dr",
+			State:      "me",
+			City:       "yarmouth",
+			ZipCode:    "12345",
+		},
+	}, {
+    "100 Southwest Maple Tree Blvd, CA 90210",
     Address{
       House:  100,
       StreetDirection: "sw",
       StreetName: "maple tree",
       StreetType: "blvd",
-    },
-  }, {
-    "100 S Imperial Valley Drive",
-    Address{
-      House:  100,
-      StreetDirection: "s",
-      StreetName: "imperial valley",
-      StreetType: "dr",
-    },
-  }, {
-    "100 s. weird. st.",
-    Address{
-      House: 100,
-      StreetDirection: "s",
-      StreetName: "weird",
-      StreetType: "st",
-    },
-  }, {
-    "221b s main st",
-    Address{
-      StreetName: "221b s main st",
-    },
-  }, {
-    "221 completely unrecognizable street name",
-    Address{
-      House: 221,
-      StreetName: "completely unrecognizable street name",
-    },
-  }, {
-    "100 Circle Drive",
-    Address{
-      House: 100,
-      StreetName: "circle",
-      StreetType: "dr",
+			State: "ca",
+			ZipCode: "90210",
     },
   },
 }

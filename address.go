@@ -3,7 +3,7 @@ package address
 
 import (
 	"fmt"
-  "regexp"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -45,46 +45,47 @@ func (a *Address) getStreetDirection(s *[]string) (string, error) {
 //	IF no street-types are in the string that match the streettypeabbreviations map,
 //	THEN an empty string will be returned.
 func (a *Address) getStreetType(s *[]string) (string, error) {
-  var t string
-  var m int
+	var t string
+	var m int
 	for i, e := range *s {
 		if n, ok := StreetTypeAbbreviations[e]; ok {
-      // Is there anything proceeding the street type?
-      if len(*s) > i + 1 {
-        if isAbbreviation((*s)[i+1]) == true {
-          // Is it "apt", "suite", "s"...?
-          // then do nothing
-        } else {
-          return "", nil
-        }
-      }
-      m = i
-      t = n
+			// Is there anything proceeding the street type?
+			if len(*s) > i+1 {
+				if isAbbreviation((*s)[i+1]) == true {
+					// Is it "apt", "suite", "s"...?
+					// then do nothing
+				} else {
+					return "", nil
+				}
+			}
+			m = i
+			t = n
 			// return n, nil
 		}
 	}
-  if t == "" {
-    return "", fmt.Errorf("No suitable street type was found in the address.")
-  }
-  del(s, m)
-  return t, nil
+	if t == "" {
+		return "", fmt.Errorf("No suitable street type was found in the address.")
+	}
+	del(s, m)
+	return t, nil
 }
 
 func isAbbreviation(s string) bool {
-  if _, ok := StreetTypeAbbreviations[s]; ok {
-    return true
-  }
-  if _, ok := CardinalDirectionAbbreviations[s]; ok {
-    return true
-  }
-  if _, ok := RuralBoxes[s]; ok {
-    return true
-  }
-  if _, ok := SuiteTypeAbbreviations[s]; ok {
-    return true
-  }
-  return false
+	if _, ok := StreetTypeAbbreviations[s]; ok {
+		return true
+	}
+	if _, ok := CardinalDirectionAbbreviations[s]; ok {
+		return true
+	}
+	if _, ok := RuralBoxes[s]; ok {
+		return true
+	}
+	if _, ok := SuiteTypeAbbreviations[s]; ok {
+		return true
+	}
+	return false
 }
+
 // Will return the first non-numeric element in the array of strings
 // that does not exist in any of the "abbreviation" maps.
 //   IF there no non-numeric strings that do not exist in any of the maps,
@@ -100,24 +101,24 @@ func (a *Address) getStreetName(s *[]string) (r string, err error) {
 	// The indices to remove at the end of the function.
 	var removeQueue queue
 
-  // Find the first non-number, non-abbreviation
+	// Find the first non-number, non-abbreviation
 	for i, e := range *s {
 		_, err := strconv.Atoi(e)
 		if err == nil {
 			continue
 		}
 
-    if isAbbreviation(e) == true {
-      continue
-    }
+		if isAbbreviation(e) == true {
+			continue
+		}
 
 		removeQueue.Push(i)
 		r = e
 		break
 	}
 
-  // If nothing was found then try again and grab the first
-  // * Cardinal Direction, "PO"/"RR"/etc, or "Suite"/"Apartment"/etc.
+	// If nothing was found then try again and grab the first
+	// * Cardinal Direction, "PO"/"RR"/etc, or "Suite"/"Apartment"/etc.
 	if r == "" {
 		for i, e := range *s {
 			_, err := strconv.Atoi(e)
@@ -142,30 +143,30 @@ func (a *Address) getStreetName(s *[]string) (r string, err error) {
 		}
 	}
 
-  // Still nothing?
-  // Then grab the first street direction or the first street type.
-  if r == "" {
-    for i, e := range *s {
+	// Still nothing?
+	// Then grab the first street direction or the first street type.
+	if r == "" {
+		for i, e := range *s {
 			_, err := strconv.Atoi(e)
 			if err == nil {
 				continue
 			}
 
-      // Street type
-      if _, ok := StreetTypeAbbreviations[e]; ok {
-        r = e
-        removeQueue.Push(i)
-        break
-      }
+			// Street type
+			if _, ok := StreetTypeAbbreviations[e]; ok {
+				r = e
+				removeQueue.Push(i)
+				break
+			}
 
-      // Street Direction
-      if _, ok := CardinalDirectionAbbreviations[e]; ok {
-        r = e
-        removeQueue.Push(i)
-        break
-      }
-    }
-  }
+			// Street Direction
+			if _, ok := CardinalDirectionAbbreviations[e]; ok {
+				r = e
+				removeQueue.Push(i)
+				break
+			}
+		}
+	}
 
 	if p, ok := Pairs[r]; ok {
 		var n string
@@ -272,10 +273,108 @@ func (a *Address) finalize(s *[]string) {
 		a.StreetName = st
 	}
 }
+
+func isZip(s string) bool {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return false
+	}
+	if n < 99999 && n > 0 {
+		return true
+	}
+	return false
+}
+
+func isState(s string) bool {
+	for _, v := range StatesCodes {
+		if s == strings.ToLower(v) {
+			return true
+		}
+	}
+	return false
+}
+
 func Normalize(s string) (a Address, err error) {
-  if err != nil {
-    return Address{}, err
-  }
+	sections := strings.Split(s, ",")
+	if len(sections) == 1 {
+		return streetNormalize(s)
+	} else if len(sections) == 2 {
+		st, err := streetNormalize(sections[0])
+		if err != nil {
+			return st, err
+		}
+		cs, err := cityStateNormalize(sections[1])
+		if err != nil {
+			return st, err
+		}
+		st.City = cs.City
+		st.State = cs.State
+		st.ZipCode = cs.ZipCode
+		return st, nil
+	} else if len(sections) == 3 {
+		st, err := streetNormalize(sections[0])
+		if err != nil {
+			return st, err
+		}
+		cs, err := cityStateNormalize(sections[1])
+		if err != nil {
+			return st, err
+		}
+		st.City = cs.City
+		st.State = cs.State
+		st.ZipCode = cs.ZipCode
+		t := strings.Fields(sections[2])
+		if isZip(t[0]) {
+			st.ZipCode = t[0]
+		} else {
+			fmt.Printf("From %s Not zip: %s\n", s, st.ZipCode)
+		}
+		return st, nil
+	}
+	return Address{}, fmt.Errorf("Unrecognized format")
+}
+
+func cityStateNormalize(s string) (a Address, err error) {
+	t := strings.Fields(s)
+	// Lowercase it all.
+	for i := range t {
+		t[i] = strings.ToLower(t[i])
+	}
+	if len(t) >= 3 {
+		//assume street, city state zip
+		if isZip(t[len(t)-1]) {
+			zip := t[len(t)-1]
+			if isState(t[len(t)-2]) {
+				state := t[len(t)-2]
+				city := strings.Join(t[:len(t)-2], " ")
+				out := Address{City:city, ZipCode:zip, State:state}
+				return out, nil
+			} else {
+				return Address{}, fmt.Errorf("%s note a state", t[len(t)-2])
+			}
+		} else {
+			return Address{}, fmt.Errorf("%s note a zipcode", t[len(t)-1])
+		}
+	} else if len(t) == 2 {
+		if isZip(t[1]) {
+			if isState(t[0]) {
+				out := Address{ZipCode:t[1], State:t[0]}
+				return out, nil
+			}
+		} else {
+			if isState(t[1]) {
+				out := Address{City:t[0], State:t[1]}
+				return out, nil
+			}
+		}
+	}
+	return Address{}, fmt.Errorf("Unknown city format: %s", s)
+}
+
+func streetNormalize(s string) (a Address, err error) {
+	if err != nil {
+		return Address{}, err
+	}
 
 	t := strings.Fields(s)
 
@@ -284,17 +383,17 @@ func Normalize(s string) (a Address, err error) {
 		t[i] = strings.ToLower(t[i])
 	}
 
-  // Strip out miscellaneous characters.
-  regIsNumeric, err := regexp.Compile("^(\\d|\\.)+$")
-  regMatchInvalid, err := regexp.Compile("[^a-zA-Z\\d\\s:]")
+	// Strip out miscellaneous characters.
+	regIsNumeric, err := regexp.Compile("^(\\d|\\.)+$")
+	regMatchInvalid, err := regexp.Compile("[^a-zA-Z\\d\\s:]")
 
-  for i := range t {
-    // Match numeric fields and don't replace their decimals.
-    if regIsNumeric.MatchString(t[i]) == false {
-      // Remove stray periods and whatnot.
-      t[i] = regMatchInvalid.ReplaceAllString(t[i], "")
-    }
-  }
+	for i := range t {
+		// Match numeric fields and don't replace their decimals.
+		if regIsNumeric.MatchString(t[i]) == false {
+			// Remove stray periods and whatnot.
+			t[i] = regMatchInvalid.ReplaceAllString(t[i], "")
+		}
+	}
 	// Every address has a street name.  Start with that.
 	a.StreetName, err = a.getStreetName(&t)
 	if err != nil {
